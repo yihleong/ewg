@@ -54,27 +54,29 @@ run this yaml file.  This yaml files sets up heat autoscaling groups.
 The following 4 yaml files are called by the primary files above, and are by
 default expected to be in a lib subdirectory:
 
-**setup_network.yaml:**  This file creates 3 separate private networks, one
-  for each tier.  In addition it creates two load balancers (using neutron 
-  LBaaS V1), one which has a public IP that connects the web private network
-  to the public network, and one with a private IP that connects the web
-  network to the services network.  The template also creates a router
-  connecting the services network to the database network.  In addition to
-  the networks and routers, the template creates 3 security groups, one for
-  each of the tiers.  
+**setup_network.yaml:**
+  This file creates 3 separate private networks, one for each tier.  In
+  addition it creates two load balancers (using neutron LBaaS V1), one which
+  has a public IP that connects the web private network to the public
+  network, and one with a private IP that connects the web network to the
+  services network.  The template also creates a router connecting the
+  services network to the database network.  In addition to the networks and
+  routers, the template creates 3 security groups, one for each of the tiers.  
 
-**launch_web_layer.yaml:**  This template file launches the web layer nodes.
-  In addition to launching instances, it installs and configures Apache and
-  Apache modproxy which is used to redirect traffic to the application nodes.
+**launch_web_layer.yaml:**
+  This template file launches the web layer nodes.  In addition to launching
+  instances, it installs and configures Apache and Apache modproxy which is
+  used to redirect traffic to the application nodes.
 
-**launch_services_layer.yaml:** This template file launches the services layer
-  nodes.  In addition to launching the instances, it installs Apache, PHP,
-  MySQL client, and OpenCart.
-
-**launch_sql_layer.yaml:**  This template file launches the database layer
-  node and installs MySQL.  In addition it creates a cinder block device to
-  store the database files.  The template also creates the required users and
-  databases for the OpenCart application.
+**launch_services_layer.yaml:**
+  This template file launches the services layer nodes.  In addition to
+  launching the instances, it installs Apache, PHP, MySQL client, and
+  OpenCart.  
+**launch_sql_layer.yaml:**
+  This template file launches the database layer node and installs MySQL.
+  In addition it creates a cinder block device to store the database files.
+  The template also creates the required users and databases for the OpenCart
+  application.
 
 -------------------------------
 Running the heat template files
