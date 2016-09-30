@@ -16,20 +16,17 @@ parameters:
     label: SSH Key Name
     description: REQUIRED PARAMETER -Name of an existing SSH KeyPair to enable SSH access to instances.
     hidden: false
-    default: cloudkey
 
   server_name:
     type: string
     label: Server Name
     description: REQUIRED PARAMETER - Name of the instance to spin up.
     hidden: false
-    default: DB_Server
 
   instance_flavor:
     type: string
     label: Instance Flavor
     description: The flavor type to use for each server.
-    default: m1.small
     hidden: false
 
   image_id:
@@ -47,48 +44,23 @@ parameters:
 
   security_group:
     type: string
-    default: Workload_DB_SG
     description: The database security group that will be utilized for all DB servers
 
   db_name:
     type: string
     description: MYSQL database name
-    default: opencart
-    constraints:
-      - length: { min: 1, max: 64 }
-        description: db_name must be between 1 and 64 characters
-      - allowed_pattern: '[a-zA-Z][a-zA-Z0-9]*'
-        description: >
-          db_name must begin with a letter and contain only alphanumeric
-          characters
 
   db_username:
     type: string
     description: OpenCart database username
-    default: opencartuser 
-    hidden: true
 
   db_password:
     type: string
     description: OpenCart database password
-    default: opencart
-    hidden: true
-    constraints:
-      - length: { min: 1, max: 41 }
-        description: db_password must be between 1 and 41 characters
-      - allowed_pattern: '[a-zA-Z0-9]*'
-        description: db_password must contain only alphanumeric characters
 
   db_root_password:
     type: string
     description: Root password for MySQL
-    default: admin
-    hidden: true
-    constraints:
-      - length: { min: 1, max: 41 }
-        description: db_root_password must be between 1 and 41 characters
-      - allowed_pattern: '[a-zA-Z0-9]*'
-        description: db_root_password must contain only alphanumeric characters
 
   db_volume_size:
     type: string

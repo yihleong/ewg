@@ -37,7 +37,9 @@ REQUIRED PARAMETERS:
 OPTIONAL PARAMETERS:
 
   * db_instance_flavor, app_instance_flavor, web_instance_flavor,
-    db_server_name, app_server_name, web_server_name, dns_nameserver
+    db_server_name, db_name,  db_username, db_password, db_root_password,
+    app_server_name, web_server_name, admin_username, admin_password,
+	admin_email, dns_nameserver
   
 **eCommerceAutoScaling.yaml:**  If you want a dynamic autoscaling environment,
 run this yaml file.  This yaml files sets up heat autoscaling groups.  
@@ -49,7 +51,9 @@ run this yaml file.  This yaml files sets up heat autoscaling groups.
   OPTIONAL PARAMETERS:
 
   * db_instance_flavor, app_instance_flavor, web_instance_flavor,
-    db_server_name, app_server_name, web_server_name, dns_nameserver
+    db_server_name, db_name,  db_username, db_password, db_root_password,
+    app_server_name, web_server_name, admin_username, admin_password,
+	admin_email, dns_nameserver
 
 The following 4 yaml files are called by the primary files above, and are by
 default expected to be in a lib subdirectory:

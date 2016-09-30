@@ -4,7 +4,7 @@ heat_template_version: 2016-04-08
 
 description: >
   This is the main Heat template for the eCommerce Workload Architecture created by the 
-  Enterprise Working Group.  This version of the tempalte does not include autoscaling,
+  Enterprise Working Group.  This version of the template does not include autoscaling,
   and does not require ceilometer.
   This template calls multiple nested templates which actually do the
   majority of the work.  This file calls the following yaml files in a ./lib subdirectory
@@ -22,10 +22,11 @@ description: >
   ssh_key_name, image_id, public_network_id
 
   OPTIONAL PARAMETERS:
-  db_instance_flavor, app_instance_flavor, web_instance_flavor, db_server_name, app_server_name, web_server_name, dns_nameserver
+  db_instance_flavor, app_instance_flavor, web_instance_flavor, db_server_name, db_name
+  db_username, db_password, db_root_password, app_server_name, web_server_name, admin_username
+  admin_password, admin_email, dns_nameserver
 
   #Created by: Craig Sterrett 9/27/2016
-
 
 ######################################
 #The parameters section allows for specifying input parameters that have to be provided when instantiating the template
@@ -99,6 +100,34 @@ parameters:
     hidden: false
     default: db_server
 
+  db_name:
+    type: string
+    label: Database Name
+    description: Name of the OpenCart database
+    hidden: false
+    default: opencart    
+
+  db_username:
+    type: string
+    label: Database username
+    description: Name of the OpenCart database user
+    hidden: false
+    default: opencartuser
+    
+  db_password:
+    type: string
+    label: Database username password
+    description: db_username password
+    hidden: false
+    default: opencart 
+    
+  db_root_password:
+    type: string
+    label: Database root user password
+    description: db root user password
+    hidden: false
+    default: opencart    
+    
   app_server_name:
     type: string
     label: Server Name
@@ -113,6 +142,21 @@ parameters:
     hidden: false
     default: web_server
 
+  admin_username:
+    type: string
+    description: Username for OpenCart Admin page
+    default: admin    
+    
+  admin_password:
+    type: string
+    description: Password for OpenCart admin user
+    default: admin
+   
+  admin_email:
+    type: string
+    description: email address for OpenCart Admin user
+    default: youremail@example.com     
+    
   dns_nameserver:
     type: comma_delimited_list
     label: DNS Name Server
@@ -120,13 +164,13 @@ parameters:
     default: 8.8.8.8,8.8.4.4
 
 ######################################
-#The resources section defines actual resources that make up a stack deployed from the HOT template (for instance compute instances, networks, storage volumes).
+#The resources section defines actual resources that make up a stack deployed from
+#the HOT template (for instance compute instances, networks, storage volumes).
 resources:
 
 ####################
 #Setup Networking and Security Group
 #Call the setup_network.yaml file
-
   network_setup:
     type: lib/setup_network.yaml
     properties:
@@ -135,7 +179,6 @@ resources:
 
 ####################
 ##Kick off a Database server
-
   launch_db_server:
     type: lib/launch_sql_layer.yaml
     properties:
@@ -145,11 +188,14 @@ resources:
       image_id: { get_param: image_id }
       private_network_id: {get_attr: [network_setup, db_private_network_id]}
       security_group: {get_attr: [network_setup, db_security_group_id]}
+      db_name: { get_param: db_name}
+      db_username: {get_param: db_username}
+      db_password: {get_param: db_password}
+      db_root_password: {get_param: db_root_password}
 
 ####################
 ##Kick off two application servers
 #Utilizing Heat resourcegroup to kick off multiple copies
-
   app_server_resource_group:
     type: OS::Heat::ResourceGroup
     properties:
@@ -166,9 +212,16 @@ resources:
          image_id:
            get_param: image_id
          private_network_id: {get_attr: [network_setup, app_private_network_id]}
+         public_network_name: {get_param: public_network_id}
          security_group: {get_attr: [network_setup, app_security_group_id]}
          pool_name: {get_attr: [network_setup, app_lbaas_pool_name]}
          db_server_ip: {get_attr: [launch_db_server, instance_ip]}
+         database_name: {get_param: db_name}
+         db_username: {get_param: db_username}
+         db_password: {get_param: db_password}
+         admin_username: {get_param: admin_username}
+         admin_password: {get_param: admin_password}
+         admin_email: {get_param: admin_email}
          #Just passing something for metadata, it's not used in this script but is used in
          #the autoscaling script
          metadata: {"metering.stack": {get_param: "OS::stack_id"}}
@@ -203,13 +256,7 @@ resources:
 ######################################
 #The outputs section defines output parameters that should be available to the user after a stack has been created.
 outputs:
-
  web_lbaas_ip:
-    description: >
-      This is the floating IP assigned to the WEB LoadBalancer.
-    value: {get_attr: [network_setup, web_lbaas_IP]}
-
- app_lbaas_ip:
-    description: >
-      This is the floating IP assigned to the Application LoadBalancer.
-    value: {get_attr: [network_setup, app_lbaas_IP]}
+    description: Floating IP address of fractal application
+    value:
+       list_join: ['', ['The OpenCart Web page is available here http://', get_attr: [network_setup, web_lbaas_IP]]]

@@ -33,7 +33,7 @@ resources:
   web_private_network:
     type: OS::Neutron::Net
     properties:
-      name: Web_Tier_private_network
+      name: eCommerce_Web_network
 
   web_private_network_subnet:
     type: OS::Neutron::Subnet
@@ -49,7 +49,7 @@ resources:
       #default gateway
       host_routes: [{"destination": 192.168.101.0/24, "nexthop": 192.168.100.5}]
       network: { get_resource: web_private_network }
-      name: Web_Tier_private_subnet
+      name: eCommerce_Web_subnet
       dns_nameservers: { get_param: dns_nameserver }
       enable_dhcp: true
 
@@ -73,7 +73,7 @@ resources:
   App_private_network:
     type: OS::Neutron::Net
     properties:
-      name: App_Tier_private_network
+      name: eCommerce_Services_network
 
   App_private_network_subnet:
     type: OS::Neutron::Subnet
@@ -89,7 +89,7 @@ resources:
       #Provide both the routes to the DB nework and to the web network
       host_routes: [{"destination": 192.168.100.0/24, "nexthop": 192.168.101.5}, {"destination": 192.168.102.0/24, "nexthop": 192.168.101.6}, {"destination": 0.0.0.0/24, "nexthop": 192.168.100.4}]
       network: { get_resource: App_private_network }
-      name: App_Tier_private_subnet
+      name: eCommerce_Services_subnet
       dns_nameservers: { get_param: dns_nameserver }
       enable_dhcp: true
 
@@ -217,7 +217,7 @@ resources:
   DB_private_network:
     type: OS::Neutron::Net
     properties:
-      name: DB_Tier_private_network
+      name: eCommerce_Database_network
 
   DB_private_network_subnet:
     type: OS::Neutron::Subnet
@@ -228,6 +228,7 @@ resources:
       host_routes: [{"destination": 192.168.101.0/24, "nexthop": 192.168.102.6}]
       network: { get_resource: DB_private_network }
       dns_nameservers: { get_param: dns_nameserver }
+      name: eCommerce_DB_subnet
       enable_dhcp: true
 
 # create a router linking Database and App network
@@ -274,7 +275,7 @@ resources:
     type: OS::Neutron::SecurityGroup
     properties:
       description: A application specific security group that passes ports 22 and 80
-      name: Workload_Web_SG
+      name: eCommerce_Web_SG
       rules:
         - protocol: tcp
           port_range_min: 22
@@ -288,7 +289,7 @@ resources:
     type: OS::Neutron::SecurityGroup
     properties:
       description: A application specific security group that passes ports 22, 80 and 3306
-      name: Workload_App_SG
+      name: eCommerce_Services_SG
       rules:
         - protocol: tcp
           port_range_min: 22
@@ -305,7 +306,7 @@ resources:
     type: OS::Neutron::SecurityGroup
     properties:
       description: A database specific security group that just passes port 3306 and 22 for ssh
-      name: Workload_DB_SG
+      name: eCommerce_Database_SG
       rules:
         - protocol: tcp
           port_range_min: 22

@@ -15,20 +15,17 @@ parameters:
     label: SSH Key Name
     description: REQUIRED PARAMETER -Name of an existing SSH KeyPair to enable SSH access to instances.
     hidden: false
-    default: cloudkey
 
   server_name:
     type: string
     label: Server Name
     description: REQUIRED PARAMETER - Name of the instance to spin up.
     hidden: false
-    default: App_Server
 
   instance_flavor:
     type: string
     label: Instance Flavor
     description: The flavor type to use for each server.
-    default: m1.small
     hidden: false
 
   image_id:
@@ -41,12 +38,16 @@ parameters:
 
   private_network_id:
     type: string
-    default: App_Tier_private_network
+    default: Services_Layer_private_network
     description: The private Application network that will be utilized for all App servers
+
+  public_network_name:
+    type: string
+    description: Public network name where we can get a floating IP from
 
   security_group:
     type: string
-    default: Workload_App_SG
+    default: Services_Layer_SG
     description: The Application security group that will be utilized for all App servers
 
   pool_name:
@@ -57,6 +58,30 @@ parameters:
     type: string
     description: Database Server IP
 
+  database_name:
+    type: string
+    description: Name of OpenCart Database
+    
+  db_username:
+    type: string
+    description: Opencart database username
+    
+  db_password:
+    type: string
+    description: Opencart database password (for db_username above)
+    
+  admin_username:
+    type: string
+    description: Username for OpenCart Admin page
+    
+  admin_password:
+    type: string
+    description: Password for OpenCart admin user
+   
+  admin_email:
+    type: string
+    description: email address for OpenCart Admin user
+    
   metadata:
     type: json
 
@@ -78,6 +103,14 @@ resources:
         str_replace:
           params:
             $db_server_ip: { get_param: db_server_ip }
+            $db_name: {get_param: database_name}
+            $db_username: {get_param: db_username}
+            $db_password: {get_param: db_password}
+            $admin_username: {get_param: admin_username}
+            $admin_password: {get_param: admin_password}
+            $admin_email: {get_param: admin_email}
+            #$floating_ip: {get_resource: app_floating_ip}
+            $floating_ip: {get_attr: [ app_floating_ip, floating_ip_address ] }
           template: |
             #!/bin/bash -v
             #use apt-get for Debian/ubuntu, and yum for centos/fedora
@@ -93,9 +126,13 @@ resources:
              yum update -y
              #Install PHP5, and mysql
              setenforce 0
-             yum install -y php php-mysql
+             yum install -y httpd
+             systemctl start httpd
+             systemctl enable httpd
+             yum install -y epel-release
+             yum -y install php php-mysql php-gd php-ldap php-odbc php-pear php-xml php-xmlrpc php-mbstring php-snmp php-soap php-mcrypt curl zlib
+             #yum install -y httpd php php-mysql php-gd php-curl php-pecl-zip
              yum install -y wget
-             yum install php-gd
              yum install -y unzip
             fi
 
@@ -112,23 +149,24 @@ resources:
             rm /var/www/html/index.html
 
             # give apache user ownership of the files
-            chown -R www-data:www-data /var/www
-            mv -i /etc/php5/conf.d/mcrypt.ini /etc/php5/mods-available/
-            php5enmod mcrypt
-            service apache2 restart
-            #usermod -a -G www-data username
-
-            ## install a copy of the configured wordpress into apache's www directory
-            #rm /var/www/html/index.html
-            #cp -R wordpress/* /var/www/html/
-            #
-            ## give apache ownership of the application files
-            #chown -R www-data:www-data /var/www/html/
-            #chown -R apache:apache /var/www/html/
-            #chmod -R g+w /var/www/html/
-            ##Allow remote database connection
-            #setsebool -P httpd_can_network_connect=1
-            #systemctl restart httpd.service
+            if apt-get -v &> /dev/null
+            then
+              chown -R www-data:www-data /var/www
+              mv -i /etc/php5/conf.d/mcrypt.ini /etc/php5/mods-available/
+              php5enmod mcrypt
+              service apache2 restart
+              #usermod -a -G www-data username
+            elif which yum &> /dev/null
+            then
+              chown -R apache:apache /var/www/
+              chmod -R g+w /var/www/html/
+              #Allow remote database connection
+              setsebool -P httpd_can_network_connect=1
+              systemctl restart httpd.service
+            fi
+            #Configure OpenCart
+            php /var/www/html/install/cli_install.php install --db_hostname $db_server_ip --db_username $db_username --db_password $db_password --db_database $db_name --db_driver mysqli --db_port 3306 --username $admin_username --password $admin_password --email $admin_email --http_server http://$floating_ip/
+            rm -r /var/www/html/install
 
   Pool_Member:
       type: OS::Neutron::PoolMember
@@ -136,6 +174,17 @@ resources:
         pool_id: {get_param: pool_name}
         address: {get_attr: [app_server, first_address]}
         protocol_port: 80
+
+  app_floating_ip:
+    type: OS::Neutron::FloatingIP
+    properties:
+      floating_network_id: { get_param: public_network_name }
+
+  associate_app_floating_ip:
+    type: OS::Nova::FloatingIPAssociation
+    properties:
+      floating_ip: { get_resource: app_floating_ip }
+      server_id: { get_resource: app_server }
 
 outputs:
   app_private_ip:
