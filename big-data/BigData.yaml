@@ -5,46 +5,51 @@ description: >
   Generated template
 
 parameters:
-  network_external_for_floating_ip_0:
+  network_external_for_floating_ip:
     default: 38a4e580-e368-4404-a2e0-cbef9343740e
     description: Network to allocate floating IP from
     type: string
+	
   network_router_0_external:
     default: 38a4e580-e368-4404-a2e0-cbef9343740e
     description: Router external network
     type: string
+	
   network_router_1_external:
     default: 38a4e580-e368-4404-a2e0-cbef9343740e
     description: Router external network
     type: string
+	
   network_router_2_external:
     default: 38a4e580-e368-4404-a2e0-cbef9343740e
     description: Router external network
     type: string
+	
   image_ubuntu:
     default: a808eacb-ab6f-4929-873d-be3ae8535f0d 
-    description: Image to use to boot all server
+    description: An Ubuntu cloud image (glance image id) to use for all server
     type: string
+	
   flavor_edge:
     default: l1.medium
     description: Flavor to use for edge server 
     type: string
+	
   flavor_master:
     default: l1.medium
     description: Flavor to use for master server
     type: string
+	
   flavor_data:
     default: l1.medium
     description: Flavor to use for worker server
     type: string
+	
   flavor_repo:
     default: l1.medium
     description: Flavor to use for repository server
     type: string
-#  config_ntp:
-#    default: 0.ubuntu.pool.ntp.org
-#    description: NTP Server (Not used now)
-#    type: string
+
   config_dns_nameserver:
     default: 8.8.8.8
     description: DNS Server for external Access (Temporary)
@@ -348,7 +353,7 @@ resources:
   floatingip_0:
     properties:
       floating_network_id:
-        get_param: network_external_for_floating_ip_0
+        get_param: network_external_for_floating_ip
     type: OS::Neutron::FloatingIP
 	
   key_0:
